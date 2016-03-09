@@ -1,0 +1,106 @@
+html, body {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-family: sans-serif;
+	font-size: 16px;
+}
+body {
+	padding: 10px;
+}
+h1 {
+	margin: 0 0 10px;
+}
+#wrapper {
+	position: relative;
+}
+#coding, #execution {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	transition: opacity .5s ease;
+}
+#coding {
+	opacity: 1;
+	z-index: 2;
+}
+#execution {
+	opacity: 0;
+	z-index: 1;
+	display: none;
+}
+.actions {
+	margin: 10px 0;
+	font-size: 0;
+}
+.actions button {
+	background: #f98e11 none repeat scroll 0 0;
+	border: 1px solid #dc7906;
+	border-radius: 3px;
+	box-shadow: 0 1px 0 #fbb15c inset;
+	color: #fff;
+	cursor: pointer;
+	display: inline-block;
+	line-height: 1;
+	padding: 0.7em 1em;
+	text-align: center;
+	transition: background 0s ease 0s, all 0.3s ease 0s, all 0s ease 0s;
+}
+.actions button:hover {
+	background: #e17c06;
+}
+.actions > * {
+	margin: 0 5px 0 0;
+	font-size: 0.8333rem;
+}
+#delay-ms {
+	width: 100%;
+	box-sizing: border-box;
+}
+#delay-ms::before {
+	content: '';
+}
+#delay-ms-container {
+	width: 0;
+	height: 2.4em;
+	vertical-align: middle;
+	overflow: hidden;
+	display: inline-block;
+	transition: width .5s ease, margin .5s ease;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+#file {
+	display: none;
+}
+#code, #input, #args {
+	width: 100%;
+	resize: vertical;
+}
+#code {
+	height: 10em;
+}
+#input, #args {
+	height: 3em;
+}
+#funge-space, #stack, #console {
+	font-family: monospace;
+}
+#console {
+	font-size: 0;
+	max-height: 400px;
+	overflow: auto;
+}
+#output, #interactive-input {
+	font-size: 12px;
+	white-space: pre-wrap;
+}
+#interactive-input {
+	color: green;
+}
+#interactive-input::after {
+	content: '\a0';
+	font-size: 12px;
+}

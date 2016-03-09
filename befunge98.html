@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Befunge-98 interpreter</title>
+<meta charset="utf-8"/>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+<link rel="stylesheet" type="text/css" href="befunge98.css"/>
+<script type="text/javascript" src="befunge98-engine.js"></script>
+<script type="text/javascript" src="befunge98.js"></script>
+</head>
+<body>
+    <h1>Befunge-98 interpreter</h1>
+    <div id="wrapper">
+        <div id="coding">
+            <input type="file" id="file"/>
+            <div class="actions">
+                <button id="go"><span class="fa fa-play"></span>&nbsp;Run</button>
+                <button id="open-file"><span class="fa fa-folder-open"></span>&nbsp;Open...</button>
+                <select id="examples">
+                    <option selected>Examples</option>
+                </select>
+                <button id="clear"><span class="fa fa-trash"></span>&nbsp;Clear</button>
+                <button id="about"><span class="fa fa-info-circle"></span>&nbsp;About</button>
+            </div>
+            <div>
+                <label for="code">Code:</label><br/>
+                <textarea id="code" placeholder="Code"></textarea>
+            </div>
+            <div class="actions">
+                <button id="interactive"><span class="fa fa-check-square"></span>&nbsp;Interactive input</button>
+                <button id="extra-args"><span class="fa fa-square"></span>&nbsp;Command line arguments</button>
+            </div>
+            <div id="input-area">
+                <label for="input">Input:</label><br/>
+                <textarea id="input" placeholder="Input"></textarea>
+            </div>
+            <div id="args-area">
+                <label for="args">Command line arguments (one per row):</label><br/>
+                <textarea id="args" placeholder="Command line arguments"></textarea>
+            </div>
+        </div>
+        <div id="execution">
+            <div class="actions">
+                <button id="back"><span class="fa fa-arrow-left"></span>&nbsp;Back</button>
+                <button id="run"><span class="fa fa-play"></span>&nbsp;Run</button>
+                <button id="pause" style="display: none;"><span class="fa fa-pause"></span>&nbsp;Pause</button>
+                <button id="delay"><span class="fa fa-square"></span>&nbsp;Delay</button>
+                <span id="delay-ms-container">
+                    <input type="number" id="delay-ms" value="500" min="10" max="10000" step="10"/>
+                </span>
+                <button id="step"><span class="fa fa-step-forward"></span>&nbsp;Step</button>
+                <button id="reset"><span class="fa fa-rotate-left"></span>&nbsp;Reset</button>
+            </div>
+            <div>Console:</div>
+            <div id="console">
+                <span id="output"></span>
+                <span id="interactive-input" contenteditable></span>
+            </div>
+            <div id="funge-space">
+            </div>
+            <div>Stack:</div>
+            <div id="stack">
+            </div>
+        </div>
+    </div>
+</body>
+</html>
