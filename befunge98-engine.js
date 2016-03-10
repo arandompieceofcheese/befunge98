@@ -163,7 +163,13 @@ var FungeSpace = function(code) {
     this.posXnegY = [[]];
     this.negXposY = [[]];
     this.negXnegY = [[]];
+    this.doExpansion();
+};
+FungeSpace.prototype.doExpansion = function() {
     Util.expand2DArray(this.posXposY, this.maxX, this.maxY, 32);
+    Util.expand2DArray(this.posXnegY, this.maxX, ~this.minY, 32);
+    Util.expand2DArray(this.negXposY, ~this.minX, this.maxY, 32);
+    Util.expand2DArray(this.negXnegY, ~this.minX, ~this.minY, 32);
 };
 FungeSpace.prototype.get = function(pos) {
     if (!this.isAddressable(pos))
@@ -200,10 +206,7 @@ FungeSpace.prototype.put = function(pos, value) {
         this.minY = Math.min(this.minY, pos.y);
         this.maxX = Math.max(this.maxX, pos.x);
         this.maxY = Math.max(this.maxY, pos.y);
-        Util.expand2DArray(this.posXposY, this.maxX, this.maxY, 32);
-        Util.expand2DArray(this.posXnegY, this.maxX, ~this.minY, 32);
-        Util.expand2DArray(this.negXposY, ~this.minX, this.maxX, 32);
-        Util.expand2DArray(this.negXnegY, ~this.minX, ~this.minY, 32);
+        this.doExpansion();
         this.set(pos, value);
     }
 };
@@ -384,7 +387,7 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
         for (var i = 0; i < a; i++)
             fp = fp << 8 + this.stackStack.pop();
         fpStr = Util.stringifyFingerprint(fp);
-        throw new Error("Fingerprint 0x" + fp.toString(16) + " (\"" + fpStr + "\") is not available.");
+        this.reverseDelta();
         break;
     case 41: /* ) */
         a = this.stackStack.pop();
@@ -392,7 +395,7 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
         for (var i = 0; i < a; i++)
             fp = fp << 8 + this.stackStack.pop();
         fpStr = Util.stringifyFingerprint(fp);
-        throw new Error("Fingerprint 0x" + fp.toString(16) + " (\"" + fpStr + "\") is not available.");
+        this.reverseDelta();
         break;
     case 42: /* * */
         b = this.stackStack.pop();
@@ -694,7 +697,6 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
             this.stackStack.clear(pushed);
             this.stackStack.push(saved);
         }
-        console.log("y", a, this.stackStack.data.slice(0));
         break;
     case 122: /* z */
         break;
