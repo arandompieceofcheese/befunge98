@@ -210,7 +210,7 @@ FungeSpace.prototype.isAddressable = function(ip) {
 };
 
 var BefungeEngine = function(code, input) {
-    this.fungeSpace = new FungeSpace(code);
+    this.fungeSpace = new FungeSpace(code.replace(/\f/g, ""));
     this.interactive = input === null;
     this.inputQueue = [];
     if (input !== null)
@@ -386,7 +386,7 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
             this.loadedFingerprints.push(b);
             for (i in BefungeEngine.fingerprints[b]) {
                 if (BefungeEngine.fingerprints[b].hasOwnProperty(i)) {
-                    this.fingerprintCommands[i.charCodeAt()].push(BefungeEngine.fingerprints[i][b]);
+                    this.fingerprintCommands[i.charCodeAt()].push(BefungeEngine.fingerprints[b][i]);
                 }
             }
             this.stackStack.push(b);
@@ -402,7 +402,12 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
             b = (b << 8) + this.stackStack.pop();
         a = this.loadedFingerprints.lastIndexOf(b);
         if (~a) {
-            
+            this.loadedFingerprints.splice(a, 1);
+            for (i in BefungeEngine.fingerprints[b]) {
+                if (BefungeEngine.fingerprints[b].hasOwnProperty(i)) {
+                    this.fingerprintCommands[i.charCodeAt()].pop();
+                }
+            }
         } else {
             this.reverseDelta();
         }
@@ -479,7 +484,6 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
         this.delta = new Vec2(-1, 0);
         break;
     case 61: /* = */
-        //throw new Error("Filesystem Funge is not available.");
         this.reverseDelta();
         break;
     case 62: /* > */
@@ -574,7 +578,6 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
         break;
     /* case 104: */ /* h */
     case 105: /* i */
-        //throw new Error("Filesystem Funge is not available.");
         this.reverseDelta();
         break;
     case 106: /* j */
@@ -603,7 +606,6 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
         this.stackStack.clear();
         break;
     case 111: /* o */
-        //throw new Error("Filesystem Funge is not available.");
         this.reverseDelta();
         break;
     case 112: /* p */
@@ -624,7 +626,6 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
         this.fungeSpace.put(this.ip, a);
         break;
     case 116: /* t */
-        //throw new Error("Concurrent Funge is not available.");
         this.reverseDelta();
         break;
     case 117: /* u */
