@@ -1,10 +1,6 @@
 # JSFunge-98
 
-<<<<<<< HEAD
 JSFunge-98 is an (almost) standards-compliant Befunge-98 interpreter written in pure JavaScript.
-=======
-JSFunge-98 is an (almost) standards-compliant Befunge-98 written in pure JavaScript.
->>>>>>> refs/remotes/origin/master
 
 ## Files
 
