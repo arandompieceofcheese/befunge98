@@ -1,8 +1,3 @@
-var log = console.log;
-console.log = function() {
-    log.apply(console, Array.from(arguments).map(e => typeof e === "string" ? e : JSON.stringify(e)))
-};
-
 var Util = {};
 Util.stringifyFingerprint = function(fingerprint) {
     var string = "";
@@ -35,7 +30,7 @@ Util.expandArray = function(array, max, fill) {
 Util.expand2DArray = function(array, maxX, maxY, fill) {
     for (var i = 0; i < array.length; i++)
         Util.expandArray(array[i], maxX, fill);
-    for (var i = array.length; i <= maxY; i++)
+    for (i = array.length; i <= maxY; i++)
         array[i] = Util.filledArray(maxX + 1, fill);
     return array;
 };
@@ -78,7 +73,7 @@ StackStack.popValue = function(stack) {
     if (stack.length === 0)
         return 0;
     return stack.pop();
-}
+};
 StackStack.prototype.toss = function() {
     return this.data[this.data.length - 1];
 };
@@ -225,7 +220,6 @@ var BefungeEngine = function(code, input) {
     this.delta = new Vec2(1, 0);
     this.stringMode = false;
     this.waitingForInput = false;
-    this.loadedFingerprints = [];
     this.offset = new Vec2(0, 0);
     this.stepCount = 0;
     this.runTimeout = -1;
@@ -234,8 +228,10 @@ var BefungeEngine = function(code, input) {
     this.previousInstruction = -1;
     this.filename = "online.b98";
     this.extraArguments = [];
-
-    this.moveLog = [];
+    this.loadedFingerprints = [];
+    this.fingerprintCommands = {};
+    for (var i = 65; i <= 90; i++)
+        this.fingerprintCommands[i] = [];
     
     this.updateCallback = function() {};
     this.outputCallback = function(text) {};
@@ -249,16 +245,17 @@ BefungeEngine.prototype.moveIP = function() {
     this.ip = this.ip.add(this.delta);
 };
 BefungeEngine.prototype.stepIP = function() {
+    var currInstruction, prevInstruction;
     do {
         var prevPosition = this.ip;
         this.moveIP();
         if (!this.fungeSpace.isAddressable(this.ip)) {
             var ip = this.ip;
             do {
-                if ((ip.x > this.fungeSpace.maxX && this.delta.x <= 0)
-                 || (ip.x < this.fungeSpace.minX && this.delta.x >= 0)
-                 || (ip.y > this.fungeSpace.maxY && this.delta.y <= 0)
-                 || (ip.y < this.fungeSpace.minY && this.delta.y >= 0))
+                if ((ip.x > this.fungeSpace.maxX && this.delta.x <= 0) ||
+                    (ip.x < this.fungeSpace.minX && this.delta.x >= 0) ||
+                    (ip.y > this.fungeSpace.maxY && this.delta.y <= 0) ||
+                    (ip.y < this.fungeSpace.minY && this.delta.y >= 0))
                     throw new Error("IP can't get back in bounds");
                 ip = ip.subtract(this.delta);
             } while (!this.fungeSpace.isAddressable(ip));
@@ -267,8 +264,8 @@ BefungeEngine.prototype.stepIP = function() {
             } while (this.fungeSpace.isAddressable(ip));
             this.ip = ip.add(this.delta);
         }
-        var prevInstruction = this.previousInstruction;
-        var currInstruction = this.fungeSpace.get(this.ip);
+        prevInstruction = this.previousInstruction;
+        currInstruction = this.fungeSpace.get(this.ip);
         this.previousInstruction = currInstruction;
         if (this.ip.equals(prevPosition))
             throw new Error("IP stuck at " + this.ip.x + "," + this.ip.y);
@@ -311,6 +308,8 @@ BefungeEngine.prototype.nextInput = function() {
     return this.inputQueue.shift();
 };
 BefungeEngine.prototype.step = function() {
+    if (this.finished)
+        return;
     try {
         var instruction = this.fungeSpace.get(this.ip);
         if (this.stringMode) {
@@ -326,9 +325,6 @@ BefungeEngine.prototype.step = function() {
         this.stepCount++;
         if (!this.keepRunning || this.delayOn)
             this.updateCallback();
-
-        this.moveLog.push([this.ip.x, this.ip.y]);
-        // if (this.finished) console.log(this.moveLog);
     } catch (e) {
         alert("Error: " + e.message);
         console.error(e);
@@ -336,7 +332,7 @@ BefungeEngine.prototype.step = function() {
     }
 };
 BefungeEngine.prototype.interpretInstruction = function(instruction) {
-    var a, b, c;
+    var a, b, c, i, j;
     switch (instruction) {
     case 32: /* space */
         break;
@@ -383,19 +379,33 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
         break;
     case 40: /* ( */
         a = this.stackStack.pop();
-        var fp = 0, fpStr;
-        for (var i = 0; i < a; i++)
-            fp = fp << 8 + this.stackStack.pop();
-        fpStr = Util.stringifyFingerprint(fp);
-        this.reverseDelta();
+        b = 0;
+        for (i = 0; i < a; i++)
+            b = (b << 8) + this.stackStack.pop();
+        if (b in BefungeEngine.fingerprints) {
+            this.loadedFingerprints.push(b);
+            for (i in BefungeEngine.fingerprints[b]) {
+                if (BefungeEngine.fingerprints[b].hasOwnProperty(i)) {
+                    this.fingerprintCommands[i.charCodeAt()].push(BefungeEngine.fingerprints[i][b]);
+                }
+            }
+            this.stackStack.push(b);
+            this.stackStack.push(1);
+        } else {
+            this.reverseDelta();
+        }
         break;
     case 41: /* ) */
         a = this.stackStack.pop();
-        var fp = 0, fpStr;
-        for (var i = 0; i < a; i++)
-            fp = fp << 8 + this.stackStack.pop();
-        fpStr = Util.stringifyFingerprint(fp);
-        this.reverseDelta();
+        b = 0;
+        for (i = 0; i < a; i++)
+            b = (b << 8) + this.stackStack.pop();
+        a = this.loadedFingerprints.lastIndexOf(b);
+        if (~a) {
+            
+        } else {
+            this.reverseDelta();
+        }
         break;
     case 42: /* * */
         b = this.stackStack.pop();
@@ -461,7 +471,6 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
         this.stackStack.push(a);
         break;
     case 59: /* ; */
-        window.engine = this;
         do
             this.stepIP();
         while (this.fungeSpace.get(this.ip) !== 59);
@@ -470,7 +479,9 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
         this.delta = new Vec2(-1, 0);
         break;
     case 61: /* = */
-        throw new Error("Filesystem Funge is not available.");
+        //throw new Error("Filesystem Funge is not available.");
+        this.reverseDelta();
+        break;
     case 62: /* > */
         this.delta = new Vec2(1, 0);
         break;
@@ -478,7 +489,6 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
         this.delta = [new Vec2(1, 0), new Vec2(0, 1), new Vec2(-1, 0), new Vec2(0, -1)][Math.floor(Math.random() * 4)];
         break;
     case 64: /* @ */
-        this.delta = new Vec2(0, 0);
         this.keepRunning = false;
         this.finished = true;
         break;
@@ -508,14 +518,11 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
     case 88: /* X */
     case 89: /* Y */
     case 90: /* Z */
-        for (var i = this.loadedFingerprints.length - 1; i >= -1; i--) {
-            if (i === -1) {
-                this.reverseDelta();
-            } else if (instruction in this.loadedFingerprints[i]) {
-                this.loadedFingerprints[i][instruction](this);
-                break;
-            }
-        }
+        a = this.fingerprintCommands[instruction];
+        if (a.length !== 0)
+            a[a.length - 1](this);
+        else
+            this.reverseDelta();
         break;
     case 91: /* [ */
         this.delta = this.delta.rotateCCW();
@@ -567,12 +574,14 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
         break;
     /* case 104: */ /* h */
     case 105: /* i */
-        throw new Error("Filesystem Funge is not available.");
+        //throw new Error("Filesystem Funge is not available.");
+        this.reverseDelta();
+        break;
     case 106: /* j */
         a = this.stackStack.pop();
         b = a < 0 ? this.delta.negate() : this.delta;
         c = a < 0 ? -a : a;
-        for (var i = 0; i < c; i++)
+        for (i = 0; i < c; i++)
             this.ip = this.ip.add(b);
         break;
     case 107: /* k */
@@ -583,7 +592,7 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
             b = this.fungeSpace.get(this.ip);
         } while (b === 32 || b === 59);
         this.ip = position;
-        for (var i = 0; i < a; i++)
+        for (i = 0; i < a; i++)
             this.interpretInstruction(b);
         if (a === 0)
             this.stepIP();
@@ -594,14 +603,15 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
         this.stackStack.clear();
         break;
     case 111: /* o */
-        throw new Error("Filesystem Funge is not available.");
+        //throw new Error("Filesystem Funge is not available.");
+        this.reverseDelta();
+        break;
     case 112: /* p */
         a = this.stackStack.popVec2();
         b = this.stackStack.pop();
         this.fungeSpace.put(a.add(this.offset), b);
         break;
     case 113: /* q */
-        this.delta = new Vec2(0, 0);
         this.keepRunning = false;
         this.finished = true;
         break;
@@ -614,7 +624,9 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
         this.fungeSpace.put(this.ip, a);
         break;
     case 116: /* t */
-        throw new Error("Concurrent Funge is not available.");
+        //throw new Error("Concurrent Funge is not available.");
+        this.reverseDelta();
+        break;
     case 117: /* u */
         if (this.stackStack.soss() === null)
             this.reverseDelta();
@@ -646,21 +658,23 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
         };
         this.stackStack.push(0);                                            /* env variables terminator */
         for (var name in environment) {
-            this.stackStack.push(0);                                        /* env variable terminator */
-            for (var j = environment[name].length - 1; j >= 0; j--)
-                this.stackStack.push(environment[name].charCodeAt(j));      /* env variable value */
-            this.stackStack.push(61);                                       /* env variable = sign */
-            for (var j = name.length - 1; j >= 0; j--)
-                this.stackStack.push(name.charCodeAt(j));                   /* env variable name */
+            if (environment.hasOwnProperty(name)) {
+                this.stackStack.push(0);                                    /* env variable terminator */
+                for (j = environment[name].length - 1; j >= 0; j--)
+                    this.stackStack.push(environment[name].charCodeAt(j));  /* env variable value */
+                this.stackStack.push(61);                                   /* env variable = sign */
+                for (j = name.length - 1; j >= 0; j--)
+                    this.stackStack.push(name.charCodeAt(j));               /* env variable name */
+            }
         }
         this.stackStack.push(0);                                            /* command line arg list terminator */
         this.stackStack.push(0);                                            /* command line arg list terminator */
-        for (var i = args.length - 1; i >= 0; i--) {
+        for (i = args.length - 1; i >= 0; i--) {
             this.stackStack.push(0);                                        /* command lne arg terminator */
-            for (var j = args[i].length - 1; j >= 0; j--)
+            for (j = args[i].length - 1; j >= 0; j--)
                 this.stackStack.push(args[i].charCodeAt(j));                /* command line arg */
         }
-        for (var i = 0; i < stackSizes.length; i++)
+        for (i = 0; i < stackSizes.length; i++)
             this.stackStack.push(stackSizes[i]);                            /* stack sizes */
         this.stackStack.push(stackSizes.length);                            /* stack stack size */
         this.stackStack.push(now.getHours() << 16                           /* hour */
@@ -729,13 +743,17 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
         }
         break;
     default:
+        /*
         if (Util.isPrintable(instruction))
             throw new Error("Unimplemented instruction '" + String.fromCharCode(instruction) + "'");
         else
             throw new Error("Unimplemented instruction " + instruction);
+        */
+        this.reverseDelta();
+        break;
     }
     return true;
-}
+};
 BefungeEngine.prototype.run = function(internal) {
     if (this.keepRunning && !internal)
         return;
@@ -758,4 +776,137 @@ BefungeEngine.prototype.stop = function() {
     this.keepRunning = false;
     if (this.runTimeout !== -1)
         clearTimeout(this.runTimeout);
+};
+BefungeEngine.fingerprints = {
+    0x4e554c4c: {
+        A: function(engine) {
+            engine.reverseDelta();
+        },
+        B: function(engine) {
+            engine.reverseDelta();
+        },
+        C: function(engine) {
+            engine.reverseDelta();
+        },
+        D: function(engine) {
+            engine.reverseDelta();
+        },
+        E: function(engine) {
+            engine.reverseDelta();
+        },
+        F: function(engine) {
+            engine.reverseDelta();
+        },
+        G: function(engine) {
+            engine.reverseDelta();
+        },
+        H: function(engine) {
+            engine.reverseDelta();
+        },
+        I: function(engine) {
+            engine.reverseDelta();
+        },
+        J: function(engine) {
+            engine.reverseDelta();
+        },
+        K: function(engine) {
+            engine.reverseDelta();
+        },
+        L: function(engine) {
+            engine.reverseDelta();
+        },
+        M: function(engine) {
+            engine.reverseDelta();
+        },
+        N: function(engine) {
+            engine.reverseDelta();
+        },
+        O: function(engine) {
+            engine.reverseDelta();
+        },
+        P: function(engine) {
+            engine.reverseDelta();
+        },
+        Q: function(engine) {
+            engine.reverseDelta();
+        },
+        R: function(engine) {
+            engine.reverseDelta();
+        },
+        S: function(engine) {
+            engine.reverseDelta();
+        },
+        T: function(engine) {
+            engine.reverseDelta();
+        },
+        U: function(engine) {
+            engine.reverseDelta();
+        },
+        V: function(engine) {
+            engine.reverseDelta();
+        },
+        W: function(engine) {
+            engine.reverseDelta();
+        },
+        X: function(engine) {
+            engine.reverseDelta();
+        },
+        Y: function(engine) {
+            engine.reverseDelta();
+        },
+        Z: function(engine) {
+            engine.reverseDelta();
+        }
+    }, /* NULL */
+    0x524f4d41: { /* ROMA */
+        C: function(engine) {
+            engine.stackStack.push(100);
+        },
+        D: function(engine) {
+            engine.stackStack.push(500);
+        },
+        I: function(engine) {
+            engine.stackStack.push(1);
+        },
+        L: function(engine) {
+            engine.stackStack.push(50);
+        },
+        M: function(engine) {
+            engine.stackStack.push(1000);
+        },
+        V: function(engine) {
+            engine.stackStack.push(5);
+        },
+        X: function(engine) {
+            engine.stackStack.push(10);
+        }
+    },
+    0x4d4f4455: { /* MODU */
+        M: function(engine) {
+            var b = engine.stackStack.pop();
+            var a = engine.stackStack.pop();
+            if (b === 0)
+                engine.stackStack.push(0);
+            else if ((a < 0) === (b < 0))
+                engine.stackStack.push(a % b);
+            else
+                engine.stackStack.push((a % b + b) % b)
+        },
+        R: function(engine) {
+            var b = engine.stackStack.pop();
+            var a = engine.stackStack.pop();
+            if (b === 0)
+                engine.stackStack.push(0);
+            else
+                engine.stackStack.push(a < 0 ? -(Math.abs(a) % Math.abs(b)) : Math.abs(a) % Math.abs(b));
+        },
+        U: function(engine) {
+            var b = engine.stackStack.pop();
+            var a = engine.stackStack.pop();
+            if (b === 0)
+                engine.stackStack.push(0);
+            else
+                engine.stackStack.push(Math.abs(a) % Math.abs(b));
+        }
+    }
 };

@@ -1,3 +1,8 @@
+/*var log = console.log;
+console.log = function() {
+    log.apply(console, Array.from(arguments).map(e => typeof e === "string" ? e : JSON.stringify(e)))
+};*/
+
 var examples = [
     { name: "Hello World!", code: '"!dlrow olleH">:#,_@' },
     { name: "Quine", code: ":0g,:93+`#@_1+" }
@@ -17,8 +22,6 @@ window.addEventListener("load", function() {
     });
     exampleSelect.selectedIndex = 0;
     var storeStringValue = function(name, value) {
-        console.log(Array.from(value).map(e=>e.charCodeAt()).reduce((a,b)=>a.includes(b)?a:a.concat([b]).sort(),[]));
-        alert("stored " + name + ":\n" + btoa(value));
         localStorage.setItem("jsfunge98_" + name, btoa(value));
     };
     var fileChooser = document.querySelector("#file");
@@ -37,7 +40,7 @@ window.addEventListener("load", function() {
             if (engine !== null)
                 engine.filename = filename;
         });
-        reader.readAsText(file);
+        reader.readAsText(file, "ISO-8859-1");
     });
     var codingArea = document.querySelector("#coding"), executionArea = document.querySelector("#execution");
     var actualHide = function(e) {
