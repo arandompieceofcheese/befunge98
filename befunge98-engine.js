@@ -239,7 +239,7 @@ var BefungeEngine = function(code, input) {
     this.delayOn = false;
 };
 
-BefungeEngine.RUN_BLOCK_SIZE = 100;
+BefungeEngine.RUN_BLOCK_SIZE = 1000;
 
 BefungeEngine.prototype.moveIP = function() {
     this.ip = this.ip.add(this.delta);

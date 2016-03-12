@@ -1,6 +1,7 @@
 # JSFunge-98
 
 JSFunge-98 is an (almost) standards-compliant Befunge-98 interpreter written in pure JavaScript.
+[Try it here!](http://misc.pietu1998.net/jsfunge-98/befunge.html)
 
 ## Files
 
