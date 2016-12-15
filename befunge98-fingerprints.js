@@ -1,4 +1,4 @@
- BefungeEngine.fingerprints[0x4e554c4c] = { /* NULL */
+BefungeEngine.fingerprints[0x4e554c4c] = { /* NULL */
     A: function(engine) {
         engine.reverseDelta();
     },
@@ -127,5 +127,14 @@ BefungeEngine.fingerprints[0x4d4f4455] = { /* MODU */
             engine.stackStack.push(0);
         else
             engine.stackStack.push(Math.abs(a) % Math.abs(b));
+    }
+};
+
+BefungeEngine.fingerprints[0x44454255] = { /* DEBU */
+    B: function(engine) {
+        engine.stop();
+    },
+    D: function(engine) {
+        engine.outputCallback(JSON.stringify(engine.stackStack.data));
     }
 };
