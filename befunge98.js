@@ -76,6 +76,13 @@ window.addEventListener("load", function() {
                 document.querySelector("#step").style.display = "inline-block";
                 document.querySelector("#pause").style.display = "none";
             }
+            if (engine.finished) {
+                document.querySelector("#exit-code").innerHTML = "\nExited with status " + engine.exitCode;
+                document.querySelector("#exit-code").style.display = "inline";
+            } else {
+                document.querySelector("#exit-code").style.display = "none";
+            }
+            document.querySelector("#console").scrollTop = document.querySelector("#console").scrollHeight;
         };
     };
     var clearExecution = function() {

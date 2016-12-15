@@ -93,7 +93,7 @@ h1 {
 	max-height: 400px;
 	overflow: auto;
 }
-#output, #interactive-input {
+#output, #interactive-input, #exit-code {
 	font-size: 12px;
 	white-space: pre-wrap;
 }
@@ -103,4 +103,8 @@ h1 {
 #interactive-input::after {
 	content: '\a0';
 	font-size: 12px;
+}
+#exit-code {
+	color: blue;
+	display: none;
 }

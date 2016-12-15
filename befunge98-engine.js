@@ -260,6 +260,7 @@ var BefungeEngine = function(code, input) {
     this.stepCount = 0;
     this.runTimeout = -1;
     this.finished = false;
+    this.exitCode = 0;
     this.keepRunning = false;
     this.previousInstruction = -1;
     this.filename = "online.b98";
@@ -364,6 +365,8 @@ BefungeEngine.prototype.step = function() {
     } catch (e) {
         alert("Error: " + e.message);
         console.error(e);
+        this.exitCode = 1;
+        this.finished = true;
         this.keepRunning = false;
     }
 };
@@ -529,8 +532,9 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
         this.delta = [new Vec2(1, 0), new Vec2(0, 1), new Vec2(-1, 0), new Vec2(0, -1)][Math.floor(Math.random() * 4)];
         break;
     case 64: /* @ */
-        this.keepRunning = false;
+        this.exitCode = 0;
         this.finished = true;
+        this.keepRunning = false;
         break;
     case 65: /* A */
     case 66: /* B */
@@ -650,8 +654,9 @@ BefungeEngine.prototype.interpretInstruction = function(instruction) {
         this.fungeSpace.put(a.add(this.offset), b);
         break;
     case 113: /* q */
-        this.keepRunning = false;
+        this.exitCode = this.stackStack.pop();
         this.finished = true;
+        this.keepRunning = false;
         break;
     case 114: /* r */
         this.reverseDelta();
