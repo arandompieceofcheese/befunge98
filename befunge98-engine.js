@@ -194,29 +194,30 @@ FungeSpace.prototype.put = function(pos, value) {
     if (this.isAddressable(pos)) {
         this.set(pos, value);
         if (value === 32) {
+            var shrunk;
             if (pos.x === this.minX) {
-                var shrunkX = pos.x;
-                while (this.isColumnEmpty(shrunkX))
-                    shrunkX++;
-                this.minX = shrunkX;
+                shrunk = pos.x;
+                while (this.isColumnEmpty(shrunk))
+                    shrunk++;
+                this.minX = shrunk;
             }
             if (pos.x === this.maxX) {
-                var shrunkX = pos.x;
-                while (this.isColumnEmpty(shrunkX))
-                    shrunkX--;
-                this.maxX = shrunkX;
+                shrunk = pos.x;
+                while (this.isColumnEmpty(shrunk))
+                    shrunk--;
+                this.maxX = shrunk;
             }
             if (pos.y === this.minY) {
-                var shrunkY = pos.y;
-                while (this.isLineEmpty(shrunkY))
-                    shrunkY++;
-                this.minY = shrunkY;
+                shrunk = pos.y;
+                while (this.isLineEmpty(shrunk))
+                    shrunk++;
+                this.minY = shrunk;
             }
             if (pos.y === this.maxY) {
-                var shrunkY = pos.y;
-                while (this.isLineEmpty(shrunkY))
-                    shrunkY--;
-                this.maxY = shrunkY;
+                shrunk = pos.y;
+                while (this.isLineEmpty(shrunk))
+                    shrunk--;
+                this.maxY = shrunk;
             }
         }
     } else if (value !== 32) {
@@ -813,136 +814,4 @@ BefungeEngine.prototype.stop = function() {
     if (this.runTimeout !== -1)
         clearTimeout(this.runTimeout);
 };
-BefungeEngine.fingerprints = {
-    0x4e554c4c: {
-        A: function(engine) {
-            engine.reverseDelta();
-        },
-        B: function(engine) {
-            engine.reverseDelta();
-        },
-        C: function(engine) {
-            engine.reverseDelta();
-        },
-        D: function(engine) {
-            engine.reverseDelta();
-        },
-        E: function(engine) {
-            engine.reverseDelta();
-        },
-        F: function(engine) {
-            engine.reverseDelta();
-        },
-        G: function(engine) {
-            engine.reverseDelta();
-        },
-        H: function(engine) {
-            engine.reverseDelta();
-        },
-        I: function(engine) {
-            engine.reverseDelta();
-        },
-        J: function(engine) {
-            engine.reverseDelta();
-        },
-        K: function(engine) {
-            engine.reverseDelta();
-        },
-        L: function(engine) {
-            engine.reverseDelta();
-        },
-        M: function(engine) {
-            engine.reverseDelta();
-        },
-        N: function(engine) {
-            engine.reverseDelta();
-        },
-        O: function(engine) {
-            engine.reverseDelta();
-        },
-        P: function(engine) {
-            engine.reverseDelta();
-        },
-        Q: function(engine) {
-            engine.reverseDelta();
-        },
-        R: function(engine) {
-            engine.reverseDelta();
-        },
-        S: function(engine) {
-            engine.reverseDelta();
-        },
-        T: function(engine) {
-            engine.reverseDelta();
-        },
-        U: function(engine) {
-            engine.reverseDelta();
-        },
-        V: function(engine) {
-            engine.reverseDelta();
-        },
-        W: function(engine) {
-            engine.reverseDelta();
-        },
-        X: function(engine) {
-            engine.reverseDelta();
-        },
-        Y: function(engine) {
-            engine.reverseDelta();
-        },
-        Z: function(engine) {
-            engine.reverseDelta();
-        }
-    }, /* NULL */
-    0x524f4d41: { /* ROMA */
-        C: function(engine) {
-            engine.stackStack.push(100);
-        },
-        D: function(engine) {
-            engine.stackStack.push(500);
-        },
-        I: function(engine) {
-            engine.stackStack.push(1);
-        },
-        L: function(engine) {
-            engine.stackStack.push(50);
-        },
-        M: function(engine) {
-            engine.stackStack.push(1000);
-        },
-        V: function(engine) {
-            engine.stackStack.push(5);
-        },
-        X: function(engine) {
-            engine.stackStack.push(10);
-        }
-    },
-    0x4d4f4455: { /* MODU */
-        M: function(engine) {
-            var b = engine.stackStack.pop();
-            var a = engine.stackStack.pop();
-            if (b === 0)
-                engine.stackStack.push(0);
-            else if ((a < 0) === (b < 0))
-                engine.stackStack.push(a % b);
-            else
-                engine.stackStack.push((a % b + b) % b)
-        },
-        R: function(engine) {
-            var b = engine.stackStack.pop();
-            var a = engine.stackStack.pop();
-            if (b === 0)
-                engine.stackStack.push(0);
-            else
-                engine.stackStack.push(a < 0 ? -(Math.abs(a) % Math.abs(b)) : Math.abs(a) % Math.abs(b));
-        },
-        U: function(engine) {
-            var b = engine.stackStack.pop();
-            var a = engine.stackStack.pop();
-            if (b === 0)
-                engine.stackStack.push(0);
-            else
-                engine.stackStack.push(Math.abs(a) % Math.abs(b));
-        }
-    }
-};
+BefungeEngine.fingerprints = {};
