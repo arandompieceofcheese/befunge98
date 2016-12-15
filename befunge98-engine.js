@@ -194,7 +194,30 @@ FungeSpace.prototype.put = function(pos, value) {
     if (this.isAddressable(pos)) {
         this.set(pos, value);
         if (value === 32) {
-            // TODO: shrink Funge-Space
+            if (pos.x === this.minX) {
+                var shrunkX = pos.x;
+                while (this.isColumnEmpty(shrunkX))
+                    shrunkX++;
+                this.minX = shrunkX;
+            }
+            if (pos.x === this.maxX) {
+                var shrunkX = pos.x;
+                while (this.isColumnEmpty(shrunkX))
+                    shrunkX--;
+                this.maxX = shrunkX;
+            }
+            if (pos.y === this.minY) {
+                var shrunkY = pos.y;
+                while (this.isLineEmpty(shrunkY))
+                    shrunkY++;
+                this.minY = shrunkY;
+            }
+            if (pos.y === this.maxY) {
+                var shrunkY = pos.y;
+                while (this.isLineEmpty(shrunkY))
+                    shrunkY--;
+                this.maxY = shrunkY;
+            }
         }
     } else if (value !== 32) {
         this.minX = Math.min(this.minX, pos.x);
@@ -207,6 +230,18 @@ FungeSpace.prototype.put = function(pos, value) {
 };
 FungeSpace.prototype.isAddressable = function(ip) {
     return ip.x >= this.minX && ip.x <= this.maxX && ip.y >= this.minY && ip.y <= this.maxY;
+};
+FungeSpace.prototype.isLineEmpty = function(y) {
+    for (var x = this.minX; x <= this.maxX; x++)
+        if (this.get(new Vec2(x, y)) !== 32)
+            return false;
+    return true;
+};
+FungeSpace.prototype.isColumnEmpty = function(x) {
+    for (var y = this.minY; y <= this.maxY; y++)
+        if (this.get(new Vec2(x, y)) !== 32)
+            return false;
+    return true;
 };
 
 var BefungeEngine = function(code, input) {
