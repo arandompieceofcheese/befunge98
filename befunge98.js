@@ -8,10 +8,18 @@ var examples = [
     { name: "Quine", code: ":0g,:93+`#@_1+" }
 ];
 window.addEventListener("load", function() {
+    var removeAllChildren = function(element) {
+        while (element.firstChild)
+            element.removeChild(element.firstChild);
+    };
+    var setTextContent = function(element, content) {
+        removeAllChildren(element);
+        element.appendChild(document.createTextNode(content));
+    };
     var exampleSelect = document.querySelector("#examples");
     for (var i = 0; i < examples.length; i++) {
         var option = document.createElement("option");
-        option.innerHTML = examples[i].name;
+        setTextContent(option, examples[i].name);
         exampleSelect.appendChild(option);
     }
     exampleSelect.addEventListener("change", function() {
@@ -49,7 +57,8 @@ window.addEventListener("load", function() {
     };
     codingArea.addEventListener("transitionend", actualHide);
     executionArea.addEventListener("transitionend", actualHide);
-    var filename = "online.b98", engine = null, delay = false, delayMs = 500, interactive = true, extraArgs = false, output = "", inputFocusInterval = 0;
+    var filename = "online.b98", engine = null, delay = false, delayMs = 500, interactive = true,
+        debug = false, extraArgs = false, output = "", inputFocusInterval = 0;
     var setupEngine = function() {
         var code = document.querySelector("#code").value;
         var input = document.querySelector("#input").value;
@@ -64,7 +73,7 @@ window.addEventListener("load", function() {
         engine.extraArguments = extraArgList.length === 0 ? [] : extraArgList.split("\n");
         engine.outputCallback = function(text) {
             output += text;
-            document.querySelector("#output").innerHTML = output;
+            setTextContent(document.querySelector("#output"), output);
         };
         engine.updateCallback = function() {
             if (engine.keepRunning) {
@@ -76,20 +85,38 @@ window.addEventListener("load", function() {
                 document.querySelector("#step").style.display = "inline-block";
                 document.querySelector("#pause").style.display = "none";
             }
+            var exitCode = document.querySelector("#exit-code");
             if (engine.finished) {
-                document.querySelector("#exit-code").innerHTML = "\nExited with status " + engine.exitCode;
-                document.querySelector("#exit-code").style.display = "inline";
+                setTextContent(exitCode, "\nExited with status " + engine.exitCode);
+                exitCode.style.display = "inline";
             } else {
-                document.querySelector("#exit-code").style.display = "none";
+                exitCode.style.display = "none";
             }
             document.querySelector("#console").scrollTop = document.querySelector("#console").scrollHeight;
+            if (debug) {
+                var stackElem = document.querySelector("#stack");
+                removeAllChildren(stackElem);
+                for (var i = 0; i < engine.stackStack.data.length; i++) {
+                    var stack = document.createElement("div"), item;
+                    stack.classList.add("stack");
+                    for (var j = 0; j < engine.stackStack.data[i].length; j++) {
+                        item = document.createElement("div");
+                        item.classList.add("stack-item");
+                        setTextContent(item, engine.stackStack.data[i][j].toString());
+                        stack.appendChild(item);
+                    }
+                    stackElem.appendChild(stack);
+                    stack.scrollLeft = stack.scrollWidth;
+                }
+            }
         };
     };
     var clearExecution = function() {
         engine.stop();
         engine.outputCallback = function(text) {};
         output = "";
-        document.querySelector("#output").innerHTML = "";
+        removeAllChildren(document.querySelector("#output"));
+        removeAllChildren(document.querySelector("#stack"));
     };
     var updateInteractiveArea = function() {
         var checkIcon = document.querySelector("#interactive span");
@@ -132,6 +159,23 @@ window.addEventListener("load", function() {
             checkIcon.classList.add("fa-square");
             delayAmount.parentNode.style.width = "0";
             delayAmount.parentNode.style.marginRight = "0";
+        }
+    };
+    var updateDebugParts = function() {
+        var checkIcon = document.querySelector("#debug span");
+        var fungeSpace = document.querySelector("#funge-space");
+        var stackContainer = document.querySelector("#stack-container");
+        if (debug) {
+            checkIcon.classList.remove("fa-square");
+            checkIcon.classList.add("fa-check-square");
+            fungeSpace.style.display = "block";
+            stackContainer.style.display = "block";
+        } else {
+            checkIcon.classList.remove("fa-check-square");
+            checkIcon.classList.add("fa-square");
+            fungeSpace.style.display = "none";
+            stackContainer.style.display = "none";
+            removeAllChildren(document.querySelector("#stack"));
         }
     };
     document.querySelector("#delay-ms").addEventListener("change", function () {
@@ -182,6 +226,11 @@ window.addEventListener("load", function() {
         updateDelayButton();
         if (engine !== null)
             engine.delayOn = delay;
+    });
+    document.querySelector("#debug").addEventListener("click", function() {
+        debug = !debug;
+        localStorage.setItem("jsfunge98_debug", debug.toString());
+        updateDebugParts();
     });
     document.querySelector("#interactive").addEventListener("click", function() {
         interactive = !interactive;
@@ -236,4 +285,6 @@ window.addEventListener("load", function() {
     updateInteractiveArea();
     extraArgs = localStorage.getItem("jsfunge98_extraargs") === "true";
     updateArgumentsArea();
+    debug = localStorage.getItem("jsfunge98_debug") === "true";
+    updateDebugParts();
 });

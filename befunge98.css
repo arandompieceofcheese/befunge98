@@ -108,3 +108,20 @@ h1 {
 	color: blue;
 	display: none;
 }
+.stack {
+	white-space: nowrap;
+	max-width: 100%;
+	overflow: auto;
+}
+.stack + .stack {
+	margin-top: 5px;
+	padding-top: 5px;
+	border-top: 1px solid #e4e6e8;
+}
+.stack-item {
+	background-color: #fafafb;
+	border: 1px solid #e4e6e8;
+	display: inline-block;
+	padding: 5px;
+	margin: 0 5px 0 0;
+}

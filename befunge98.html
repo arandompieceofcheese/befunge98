@@ -3,7 +3,7 @@
 <head>
 <title>Befunge-98 interpreter</title>
 <meta charset="utf-8"/>
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>
 <link rel="stylesheet" type="text/css" href="befunge98.css"/>
 <script type="text/javascript" src="befunge98-engine.js"></script>
 <script type="text/javascript" src="befunge98-fingerprints.js"></script>
@@ -51,6 +51,7 @@
                 </span>
                 <button id="step"><span class="fa fa-step-forward"></span>&nbsp;Step</button>
                 <button id="reset"><span class="fa fa-rotate-left"></span>&nbsp;Reset</button>
+                <button id="debug"><span class="fa fa-check-square"></span>&nbsp;Debug</button>
             </div>
             <div>Console:</div>
             <div id="console">
@@ -60,8 +61,10 @@
             </div>
             <div id="funge-space">
             </div>
-            <div>Stack:</div>
-            <div id="stack">
+            <div id="stack-container">
+                <div>Stack:</div>
+                <div id="stack">
+                </div>
             </div>
         </div>
     </div>
