@@ -358,8 +358,10 @@ BefungeEngine.prototype.step = function() {
             if (!this.interpretInstruction(instruction))
                 return;
         }
-        this.stepIP();
-        this.stepCount++;
+        if (!this.finished) {
+            this.stepIP();
+            this.stepCount++;
+        }
         if (!this.keepRunning || this.delayOn)
             this.updateCallback();
     } catch (e) {

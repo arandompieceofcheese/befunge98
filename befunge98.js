@@ -24,7 +24,8 @@ window.addEventListener("load", function() {
     }
     exampleSelect.addEventListener("change", function() {
         if (exampleSelect.selectedIndex > 0) {
-            document.querySelector("#code").value = examples[exampleSelect.selectedIndex - 1].code;
+            var code = document.querySelector("#code").value = examples[exampleSelect.selectedIndex - 1].code;
+            storeStringValue("code", code);
             exampleSelect.selectedIndex = 0;
         }
     });
@@ -58,14 +59,15 @@ window.addEventListener("load", function() {
     codingArea.addEventListener("transitionend", actualHide);
     executionArea.addEventListener("transitionend", actualHide);
     var filename = "online.b98", engine = null, delay = false, delayMs = 500, interactive = true,
-        debug = false, extraArgs = false, output = "", inputFocusInterval = 0;
+        debug = false, extraArgs = false, output = "", inputFocusInterval = 0,
+        spaceHeight = 300, spaceX = 0, spaceY = 0, activeCell, manualPos = false;
     var setupEngine = function() {
         var code = document.querySelector("#code").value;
         var input = document.querySelector("#input").value;
         document.querySelector("#run").style.display = "inline-block";
         document.querySelector("#step").style.display = "inline-block";
         document.querySelector("#pause").style.display = "none";
-        engine = new BefungeEngine(code, interactive ? null : input);
+        window.engine = engine = new BefungeEngine(code, interactive ? null : input);
         engine.delayOn = delay;
         engine.delay = delayMs;
         engine.filename = filename;
@@ -94,29 +96,80 @@ window.addEventListener("load", function() {
             }
             document.querySelector("#console").scrollTop = document.querySelector("#console").scrollHeight;
             if (debug) {
-                var stackElem = document.querySelector("#stack");
-                removeAllChildren(stackElem);
-                for (var i = 0; i < engine.stackStack.data.length; i++) {
-                    var stack = document.createElement("div"), item;
-                    stack.classList.add("stack");
-                    for (var j = 0; j < engine.stackStack.data[i].length; j++) {
-                        item = document.createElement("div");
-                        item.classList.add("stack-item");
-                        setTextContent(item, engine.stackStack.data[i][j].toString());
-                        stack.appendChild(item);
-                    }
-                    stackElem.appendChild(stack);
-                    stack.scrollLeft = stack.scrollWidth;
-                }
+                updateStack();
+                updateFungeSpace();
             }
         };
+        updateStack();
+        updateFungeSpace();
     };
+    var updateStack = function() {
+        var stackRoot = document.querySelector("#stack");
+        removeAllChildren(stackRoot);
+        for (var i = 0; i < engine.stackStack.data.length; i++) {
+            var stackElem = document.createElement("div");
+            stackElem.classList.add("stack");
+            if (engine.stackStack.data[i].length == 0) {
+                var itemElem = document.createElement("div");
+                itemElem.classList.add("stack-empty");
+                setTextContent(itemElem, "(empty)");
+                stackElem.appendChild(itemElem);
+            }
+            for (var j = 0; j < engine.stackStack.data[i].length; j++) {
+                var itemElem = document.createElement("div");
+                itemElem.classList.add("stack-item");
+                setTextContent(itemElem, engine.stackStack.data[i][j].toString());
+                stackElem.appendChild(itemElem);
+            }
+            stackRoot.appendChild(stackElem);
+            stackElem.scrollLeft = stackElem.scrollWidth;
+        }
+    };
+    var updateFungeSpace = function() {
+        var spaceRoot = document.querySelector("#funge-space");
+        var updateContents = true;
+        activeCell = null;
+        if (updateContents) {
+            removeAllChildren(spaceRoot);
+            for (var y = engine.fungeSpace.minY; y <= engine.fungeSpace.maxY; y++) {
+                var row = document.createElement("tr");
+                for (var x = engine.fungeSpace.minX; x <= engine.fungeSpace.maxX; x++) {
+                    var cell = document.createElement("td");
+                    var pos = new Vec2(x, y);
+                    cell.setAttribute("id", "cell-" + x + "-" + y);
+                    if (pos.equals(engine.ip)) {
+                        cell.classList.add("active");
+                        activeCell = cell;
+                    }
+                    var char = engine.fungeSpace.get(pos);
+                    char = Util.isPrintable(char) ? String.fromCharCode(char) : char;
+                    setTextContent(cell, char);
+                    row.appendChild(cell);
+                }
+                spaceRoot.appendChild(row);
+            }
+        } else {
+
+        }
+        repositionFungeSpace();
+    };
+    var repositionFungeSpace = function() {
+        var spaceRoot = document.querySelector("#funge-space");
+        if (!manualPos && activeCell) {
+            var spaceContainer = document.querySelector("#funge-space-container");
+            spaceX = (spaceContainer.offsetWidth - activeCell.offsetWidth) / 2 - activeCell.offsetLeft;
+            spaceY = (spaceContainer.offsetHeight - activeCell.offsetHeight) / 2 - activeCell.offsetTop;
+        }
+        spaceRoot.style.left = spaceX + "px";
+        spaceRoot.style.top = spaceY + "px";
+    }
     var clearExecution = function() {
         engine.stop();
         engine.outputCallback = function(text) {};
         output = "";
         removeAllChildren(document.querySelector("#output"));
         removeAllChildren(document.querySelector("#stack"));
+        removeAllChildren(document.querySelector("#exit-code"));
     };
     var updateInteractiveArea = function() {
         var checkIcon = document.querySelector("#interactive span");
@@ -163,20 +216,27 @@ window.addEventListener("load", function() {
     };
     var updateDebugParts = function() {
         var checkIcon = document.querySelector("#debug span");
-        var fungeSpace = document.querySelector("#funge-space");
-        var stackContainer = document.querySelector("#stack-container");
+        var debugContainer = document.querySelector("#debug-container");
         if (debug) {
             checkIcon.classList.remove("fa-square");
             checkIcon.classList.add("fa-check-square");
-            fungeSpace.style.display = "block";
-            stackContainer.style.display = "block";
+            debugContainer.style.display = "block";
         } else {
             checkIcon.classList.remove("fa-check-square");
             checkIcon.classList.add("fa-square");
-            fungeSpace.style.display = "none";
-            stackContainer.style.display = "none";
-            removeAllChildren(document.querySelector("#stack"));
+            debugContainer.style.display = "none";
+            if (engine.keepRunning) {
+                removeAllChildren(document.querySelector("#stack"));
+                removeAllChildren(document.querySelector("#funge-space"))
+            } else {
+                updateStack();
+                updateFungeSpace();
+            }
         }
+    };
+    var resizeFungeSpace = function() {
+        document.querySelector("#funge-space-container").style.height = spaceHeight + "px";
+        repositionFungeSpace();
     };
     document.querySelector("#delay-ms").addEventListener("change", function () {
         var newDelay = parseInt(document.querySelector("#delay-ms").value);
@@ -186,7 +246,7 @@ window.addEventListener("load", function() {
         if (engine !== null)
             engine.delay = newDelay;
     });
-    [].slice.call(document.querySelectorAll("#code, #input")).forEach(function(e) {
+    [].slice.call(document.querySelectorAll("#code, #input, #args")).forEach(function(e) {
         e.addEventListener("change", function(e) {
             storeStringValue(e.target.id, e.target.value);
         });
@@ -197,12 +257,12 @@ window.addEventListener("load", function() {
         document.querySelector("#args").value = "";
     });
     document.querySelector("#go").addEventListener("click", function() {
-        setupEngine();
-        codingArea.style.opacity = 0;
-        codingArea.style.zIndex = 1;
         executionArea.style.opacity = 1;
         executionArea.style.display = "block";
         executionArea.style.zIndex = 2;
+        setupEngine();
+        codingArea.style.opacity = 0;
+        codingArea.style.zIndex = 1;
         inputFocusInterval = setInterval(function() {
             if (interactive) {
                 document.querySelector("#interactive-input").focus();
@@ -240,6 +300,10 @@ window.addEventListener("load", function() {
     document.querySelector("#extra-args").addEventListener("click", function() {
         extraArgs = !extraArgs;
         localStorage.setItem("jsfunge98_extraargs", extraArgs.toString());
+        if (!extraArgs)
+            localStorage.removeItem("jsfunge98_args");
+        else
+            storeStringValue("args", document.querySelector("#args").value);
         updateArgumentsArea();
     });
     document.querySelector("#reset").addEventListener("click", function() {
@@ -269,12 +333,48 @@ window.addEventListener("load", function() {
         }
         engine.step();
     });
+    var resizingFungeSpace = false, movingFungeSpace = false, dragStartX, dragStartY, dragStartXVal, dragStartYVal;
+    window.addEventListener("mousemove", function(e) {
+        if (resizingFungeSpace) {
+            spaceHeight = Math.max(100, dragStartYVal + e.clientY - dragStartY);
+            resizeFungeSpace();
+        } else if (movingFungeSpace) {
+            spaceX = dragStartXVal + e.clientX - dragStartX;
+            spaceY = dragStartYVal + e.clientY - dragStartY;
+            manualPos = true;
+            repositionFungeSpace();
+        }
+    });
+    window.addEventListener("mouseup", function() {
+        resizingFungeSpace = movingFungeSpace = false;
+        document.body.classList.remove("resizing", "moving", "noselect");
+        localStorage.setItem("jsfunge98_fungespaceheight", spaceHeight.toString());
+    });
+    document.querySelector("#funge-space-resize").addEventListener("mousedown", function(e) {
+        dragStartY = e.clientY;
+        dragStartYVal = spaceHeight;
+        resizingFungeSpace = true;
+        document.body.classList.add("resizing", "noselect");
+        e.stopPropagation();
+    });
+    document.querySelector("#funge-space-container").addEventListener("mousedown", function(e) {
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        dragStartXVal = spaceX;
+        dragStartYVal = spaceY;
+        movingFungeSpace = true;
+        document.body.classList.add("moving", "noselect");
+    });
+    window.addEventListener("resize", repositionFungeSpace);
     var storedCode = localStorage.getItem("jsfunge98_code");
     if (storedCode !== null)
         document.querySelector("#code").value = atob(storedCode);
     var storedInput = localStorage.getItem("jsfunge98_input");
     if (storedInput !== null)
         document.querySelector("#input").value = atob(storedInput);
+    var storedArgs = localStorage.getItem("jsfunge98_args");
+    if (storedArgs !== null)
+        document.querySelector("#args").value = atob(storedArgs);
     var storedDelay = parseInt(localStorage.getItem("jsfunge98_debugdelay"));;
     if (storedDelay !== null && !isNaN(storedDelay))
         delayMs = storedDelay;
@@ -287,4 +387,6 @@ window.addEventListener("load", function() {
     updateArgumentsArea();
     debug = localStorage.getItem("jsfunge98_debug") === "true";
     updateDebugParts();
+    spaceHeight = parseInt(localStorage.getItem("jsfunge98_fungespaceheight") || "300");
+    resizeFungeSpace();
 });
